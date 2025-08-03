@@ -1,117 +1,125 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Animated,
-  Pressable,
-  StyleSheet,
-  Dimensions,
-  ScrollView,
-} from 'react-native';
+// app/index.tsx
+import { Image, ScrollView, Text, View, StyleSheet } from "react-native";
 
-const windowWidth = Dimensions.get('window').width;
+// Data Mahasiswa
+const daftarMahasiswa = [
+  { nama: "ALVIAN SYAH BURHANI", nim: "105841103522" },
+  { nama: "MAJERI", nim: "105841103622" },
+  { nama: "HAMDANI", nim: "105841103722" },
+  { nama: "MULIANA", nim: "105841103822" },
+  { nama: "SULTAN ALWI MAULANA H", nim: "105841103922" },
+  { nama: "RINDIANI SAPUTRI", nim: "105841104022" },
+  { nama: "SELFIRA AYU SAFITRI", nim: "105841104122" },
+  { nama: "ALIF RYANTO RAHMAN", nim: "105841104222" },
+  { nama: "ERIKA YANTI", nim: "105841104322" },
+  { nama: "ZULKIFLI", nim: "105841104422" },
+  { nama: "FIFIANA", nim: "105841104522" },
+];
 
-const generateImageList = () => {
-  const prefixNIM = '10584110';
-  const suffixNIM = '22';
-  const baseImage = 'https://simak.unismuh.ac.id/upload/mahasiswa/';
-  const imageQuery = '_.jpg?1751871539';
-  const altImage =
-    'https://uploads-us-west-2.insided.com/figma-en/attachment/7105e9c010b3d1f0ea893ed5ca3bd58e6cec090e.gif';
+const nimSaya = "105841104022";
 
-  const imageList: { main: string; alt: string }[] = [];
-  for (let num = 40; num <= 49; num++) {
-    const nim = `${prefixNIM}${num}${suffixNIM}`;
-    imageList.push({
-      main: `${baseImage}${nim}${imageQuery}`,
-      alt: altImage,
-    });
-  }
-  return imageList;
-};
+// Ambil data sekitar
+function ambilDataSekitar(nimTarget: string, data: typeof daftarMahasiswa, jumlah = 5) {
+  const index = data.findIndex((item) => item.nim === nimTarget);
+  const sebelum = data.slice(Math.max(0, index - jumlah), index);
+  const sesudah = data.slice(index + 1, index + 1 + jumlah);
+  return [...sebelum, data[index], ...sesudah];
+}
 
-const imagePairs = generateImageList();
+const fontList = [
+  "IBMPlexSans-Italic",
+  "Inter-Variable",
+  "Lato-Bold",
+  "Montserrat-Italic",
+  "OpenSans-Condensed-Bold",
+  "Poppins-Bold",
+  "Raleway-Italic",
+  "Roboto-Condensed-Bold",
+  "Rubik-Italic",
+  "Sora-Variable",
+];
 
-export default function MahasiswaGrid3x3() {
-  const [isAltList, setIsAltList] = useState(imagePairs.map(() => false));
-  const scales = useRef(imagePairs.map(() => new Animated.Value(1))).current;
-  const [scaleValues, setScaleValues] = useState(imagePairs.map(() => 1));
-
-  const handleImagePress = (idx: number) => {
-    const currentScale = scaleValues[idx];
-    // Skala baru, maksimum 2x
-    const newScale = Math.min(currentScale + 0.2, 2); // bisa klik beberapa kali sampai 2x
-
-    // Jalankan animasi ke skala baru
-    Animated.spring(scales[idx], {
-      toValue: newScale,
-      friction: 5,
-      useNativeDriver: true,
-    }).start();
-
-    // Update skala terakhir
-    setScaleValues((prev) =>
-      prev.map((val, i) => (i === idx ? newScale : val))
-    );
-
-    // Toggle gambar alternatif
-    setIsAltList((prev) =>
-      prev.map((item, i) => (i === idx ? !item : item))
-    );
-  };
+export default function Index() {
+  const dataFinal = ambilDataSekitar(nimSaya, daftarMahasiswa, 5);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.grid}>
-        {imagePairs.map((item, idx) => (
-          <Pressable key={idx} onPress={() => handleImagePress(idx)}>
-            <View style={styles.imageWrapper}>
-              <Animated.Image
-                source={{ uri: isAltList[idx] ? item.alt : item.main }}
-                style={[
-                  styles.image,
-                  {
-                    transform: [{ scale: scales[idx] }],
-                  },
-                ]}
-              />
-            </View>
-          </Pressable>
-        ))}
-      </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {dataFinal.map((item, index) => {
+        const isMe = item.nim === nimSaya;
+        return (
+          <View key={item.nim} style={[styles.card, isMe && styles.myCard]}>
+            <Image
+              source={{
+                uri: `https://simak.unismuh.ac.id/upload/mahasiswa/${item.nim}_.jpg`,
+              }}
+              style={styles.avatar}
+            />
+            <Text
+              style={[
+                styles.name,
+                styles.nameBorder,
+                { fontFamily: fontList[index % fontList.length] },
+              ]}
+            >
+              {item.nama}
+            </Text>
+            <Text style={styles.nim}>{item.nim}</Text>
+          </View>
+        );
+      })}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#eef5ff',
+    flex: 1,
+    backgroundColor: "#a8edea",
+  },
+  scrollContent: {
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+  },
+  card: {
+    backgroundColor: "#ffffff",
+    borderRadius: 14,
     paddingVertical: 15,
+    alignItems: "center",
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  imageWrapper: {
-    width: windowWidth / 3 - 10,
-    height: windowWidth / 3 - 10,
-    margin: 5,
-    borderRadius: 12,
-    backgroundColor: '#ffffff',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+  myCard: {
     borderWidth: 2,
-    borderColor: '#6ab7ff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 4,
+    borderColor: "#4c9aff",
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+  avatar: {
+    width: 75,
+    height: 75,
+    borderRadius: 38,
+    marginBottom: 10,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  nameBorder: {
+    borderWidth: 1,
+    borderColor: "#4c9aff",
+    borderRadius: 12,
+    backgroundColor: "#eef5ff",
+    overflow: "hidden",
+  },
+  nim: {
+    fontSize: 12,
+    color: "#555",
   },
 });
