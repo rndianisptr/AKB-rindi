@@ -2,17 +2,14 @@ import React, { useState, useRef } from 'react';
 import {
   View,
   Animated,
-  Image,
   Pressable,
   StyleSheet,
   Dimensions,
   ScrollView,
 } from 'react-native';
 
-// Mengambil ukuran layar
 const windowWidth = Dimensions.get('window').width;
 
-// Fungsi untuk menghasilkan daftar gambar
 const generateImageList = () => {
   const prefixNIM = '10584110';
   const suffixNIM = '22';
@@ -22,7 +19,6 @@ const generateImageList = () => {
     'https://uploads-us-west-2.insided.com/figma-en/attachment/7105e9c010b3d1f0ea893ed5ca3bd58e6cec090e.gif';
 
   const imageList: { main: string; alt: string }[] = [];
-
   for (let num = 40; num <= 49; num++) {
     const nim = `${prefixNIM}${num}${suffixNIM}`;
     imageList.push({
@@ -30,35 +26,32 @@ const generateImageList = () => {
       alt: altImage,
     });
   }
-
   return imageList;
 };
 
-// Data gambar
 const imagePairs = generateImageList();
 
 export default function MahasiswaGrid3x3() {
-  // State untuk menyimpan kondisi alternatif tiap gambar
   const [isAltList, setIsAltList] = useState(imagePairs.map(() => false));
-
-  // Animated value untuk setiap gambar
   const scales = useRef(imagePairs.map(() => new Animated.Value(1))).current;
+  const [scaleValues, setScaleValues] = useState(imagePairs.map(() => 1));
 
-  // Fungsi untuk menangani klik pada gambar
   const handleImagePress = (idx: number) => {
-    // Animasi scaling hingga 2x
-    Animated.sequence([
-      Animated.spring(scales[idx], {
-        toValue: 2,
-        friction: 4,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scales[idx], {
-        toValue: 1,
-        friction: 5,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    const currentScale = scaleValues[idx];
+    // Skala baru, maksimum 2x
+    const newScale = Math.min(currentScale + 0.2, 2); // bisa klik beberapa kali sampai 2x
+
+    // Jalankan animasi ke skala baru
+    Animated.spring(scales[idx], {
+      toValue: newScale,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+
+    // Update skala terakhir
+    setScaleValues((prev) =>
+      prev.map((val, i) => (i === idx ? newScale : val))
+    );
 
     // Toggle gambar alternatif
     setIsAltList((prev) =>
@@ -91,7 +84,7 @@ export default function MahasiswaGrid3x3() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#eef5ff', // Background biru lembut
+    backgroundColor: '#eef5ff',
     paddingVertical: 15,
   },
   grid: {
@@ -100,18 +93,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imageWrapper: {
-    width: windowWidth / 3 - 10, // 3 kolom
-    height: windowWidth / 3 - 10, // 3 baris per layar
+    width: windowWidth / 3 - 10,
+    height: windowWidth / 3 - 10,
     margin: 5,
     borderRadius: 12,
     backgroundColor: '#ffffff',
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-
-    // Efek border & shadow
     borderWidth: 2,
-    borderColor: '#6ab7ff', // Border biru
+    borderColor: '#6ab7ff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
