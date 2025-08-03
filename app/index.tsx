@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
+  Animated,
   Image,
   Pressable,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 
+// Mengambil ukuran layar
 const windowWidth = Dimensions.get('window').width;
 
 // Fungsi untuk menghasilkan daftar gambar
@@ -32,22 +34,35 @@ const generateImageList = () => {
   return imageList;
 };
 
+// Data gambar
 const imagePairs = generateImageList();
 
 export default function MahasiswaGrid3x3() {
-  const [imageStates, setImageStates] = useState(
-    imagePairs.map(() => ({ scale: 1, isAlt: false }))
-  );
+  // State untuk menyimpan kondisi alternatif tiap gambar
+  const [isAltList, setIsAltList] = useState(imagePairs.map(() => false));
 
+  // Animated value untuk setiap gambar
+  const scales = useRef(imagePairs.map(() => new Animated.Value(1))).current;
+
+  // Fungsi untuk menangani klik pada gambar
   const handleImagePress = (idx: number) => {
-    setImageStates((prevState) =>
-      prevState.map((state, i) => {
-        if (i !== idx) return state;
-        return {
-          scale: state.scale < 1.8 ? state.scale * 1.2 : 1.8,
-          isAlt: !state.isAlt,
-        };
-      })
+    // Animasi scaling hingga 2x
+    Animated.sequence([
+      Animated.spring(scales[idx], {
+        toValue: 2,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scales[idx], {
+        toValue: 1,
+        friction: 5,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Toggle gambar alternatif
+    setIsAltList((prev) =>
+      prev.map((item, i) => (i === idx ? !item : item))
     );
   };
 
@@ -57,14 +72,12 @@ export default function MahasiswaGrid3x3() {
         {imagePairs.map((item, idx) => (
           <Pressable key={idx} onPress={() => handleImagePress(idx)}>
             <View style={styles.imageWrapper}>
-              <Image
-                source={{
-                  uri: imageStates[idx].isAlt ? item.alt : item.main,
-                }}
+              <Animated.Image
+                source={{ uri: isAltList[idx] ? item.alt : item.main }}
                 style={[
                   styles.image,
                   {
-                    transform: [{ scale: imageStates[idx].scale }],
+                    transform: [{ scale: scales[idx] }],
                   },
                 ]}
               />
@@ -78,7 +91,7 @@ export default function MahasiswaGrid3x3() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#eef5ff', // biru lembut
+    backgroundColor: '#eef5ff', // Background biru lembut
     paddingVertical: 15,
   },
   grid: {
@@ -87,19 +100,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imageWrapper: {
-    width: windowWidth / 3 - 10,  // 3 kolom
-    height: windowWidth / 3 - 10, // 3 baris per layar penuh
+    width: windowWidth / 3 - 10, // 3 kolom
+    height: windowWidth / 3 - 10, // 3 baris per layar
     margin: 5,
     borderRadius: 12,
     backgroundColor: '#ffffff',
     overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    // Efek border & shadow
+    borderWidth: 2,
+    borderColor: '#6ab7ff', // Border biru
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
-    elevation: 3,
-    borderWidth: 2,
-    borderColor: '#6ab7ff',
+    elevation: 4,
   },
   image: {
     width: '100%',
